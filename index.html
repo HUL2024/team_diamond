@@ -264,6 +264,27 @@ main{padding:28px 36px 110px;max-width:1400px;margin:0 auto;}
       </div>
 
       <button class="btn-apply" onclick="applyConfig()">Apply &amp; Connect</button>
+
+      <!-- SHAREABLE LINK GENERATOR -->
+      <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border);">
+        <div class="cfg-title">🔗 Generate Shareable Link</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6;">
+          Generates a link with all config baked in. Anyone who opens it sees live results instantly — no password or setup needed.
+        </div>
+        <button class="btn-sm" onclick="generateShareLink()">Generate Link</button>
+        <div id="share-link-box" style="display:none;margin-top:10px;">
+          <input class="cfg-input" id="share-link-input" type="text" readonly
+            style="cursor:pointer;color:var(--gold);font-size:11px;" onclick="this.select()"/>
+          <div style="display:flex;align-items:center;gap:10px;margin-top:8px;">
+            <button class="btn-sm" onclick="copyShareLink()">📋 Copy Link</button>
+            <span id="copy-confirm" style="font-size:11px;color:var(--green);display:none;">✓ Copied!</span>
+          </div>
+          <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;">
+            The link encodes your Apps Script URL, candidate names, and room names. Share with your team or display on a screen. The password-protected setup panel is still only accessible to you.
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 </main>
@@ -304,6 +325,34 @@ const S={
 };
 
 document.getElementById('current-date').textContent=new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+
+// ── LOAD CONFIG FROM URL PARAMS (Option 2 — shareable link) ──────────────────
+// Example URL: index.html?url=SCRIPT_URL&c=Name1|Name2|Name3&r=Room1|Room2|Room3
+(function loadFromURL(){
+  try{
+    const p=new URLSearchParams(window.location.search);
+    const urlParam  = p.get('url');
+    const candsParam= p.get('c');
+    const roomsParam= p.get('r');
+    if(urlParam){
+      S.scriptUrl=decodeURIComponent(urlParam);
+      S.mode='apps';
+    }
+    if(candsParam){
+      const parsed=decodeURIComponent(candsParam).split('|').map(s=>s.trim()).filter(Boolean);
+      if(parsed.length) S.cands=parsed;
+    }
+    if(roomsParam){
+      const parsed=decodeURIComponent(roomsParam).split('|').map(s=>s.trim()).filter(Boolean);
+      if(parsed.length) S.rooms=parsed;
+    }
+    if(urlParam){
+      // Don't show setup prompt — data comes from URL
+      document.getElementById('status-msg').textContent='Live data loading from shared link…';
+    }
+  }catch(e){console.warn('URL param parse error:',e);}
+})();
+
 restoreConfigUI();
 renderAll();
 if(S.mode==='apps'&&S.scriptUrl)startPolling();
@@ -543,6 +592,33 @@ function renderAll(){
       <div class="room-total"><span>Total from this room</span><span>${isRep?roomTotal.toLocaleString():'—'}</span></div>
     </div>`;
   });
+}
+
+// ── SHARE LINK GENERATOR ──────────────────────────────────────────────────────
+function generateShareLink(){
+  const scriptUrl = document.getElementById('script-url').value.trim() || S.scriptUrl;
+  const cands = Array.from(document.querySelectorAll('.cand-input')).map(e=>e.value.trim()).filter(Boolean);
+  const rooms  = Array.from(document.querySelectorAll('.room-input')).map(e=>e.value.trim()).filter(Boolean);
+  if(!scriptUrl){ alert('Please enter your Apps Script URL first.'); return; }
+  const base = window.location.origin + window.location.pathname;
+  const params = new URLSearchParams({
+    url: scriptUrl,
+    c: (cands.length ? cands : S.cands).join('|'),
+    r: (rooms.length  ? rooms  : S.rooms).join('|'),
+  });
+  const link = base + '?' + params.toString();
+  document.getElementById('share-link-input').value = link;
+  document.getElementById('share-link-box').style.display = 'block';
+}
+
+function copyShareLink(){
+  const input = document.getElementById('share-link-input');
+  input.select();
+  navigator.clipboard.writeText(input.value).then(()=>{
+    const conf = document.getElementById('copy-confirm');
+    conf.style.display='inline';
+    setTimeout(()=>conf.style.display='none', 2500);
+  }).catch(()=>{ document.execCommand('copy'); });
 }
 
 function addLog(msg,isNew=false){

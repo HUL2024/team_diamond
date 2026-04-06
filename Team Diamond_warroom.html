@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title> Team Diamond — Election War Room</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#07090f;--surface:#0c1018;--card:#101520;--border:#1a2235;--gold:#c9991a;--gold2:#f0c040;--muted:#49586e;--text:#dce6f0;--dim:#8a9bb0;--green:#2ecc71;--red:#e05252;}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:999;background:repeating-linear-gradient(to bottom,transparent 0,transparent 3px,rgba(0,0,0,0.055) 3px,rgba(0,0,0,0.055) 4px);}
+header{display:flex;align-items:center;justify-content:space-between;padding:16px 36px;border-bottom:1px solid var(--border);background:linear-gradient(90deg,#0c1018,#0e1520);position:sticky;top:0;z-index:100;}
+.logo-block{display:flex;align-items:center;gap:14px;}
+.logo-icon{width:40px;height:40px;border-radius:8px;background:linear-gradient(135deg,var(--gold),var(--gold2));display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue';font-size:22px;color:#07090f;}
+.logo-text .org{font-family:'Bebas Neue';font-size:22px;letter-spacing:2px;color:var(--gold2);}
+.logo-text .sub{font-size:11px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;}
+.header-right{display:flex;align-items:center;gap:20px;}
+.live-badge{display:flex;align-items:center;gap:7px;padding:6px 14px;border-radius:20px;border:1px solid rgba(46,204,113,0.3);background:rgba(46,204,113,0.08);font-size:12px;font-weight:600;letter-spacing:1px;color:var(--green);text-transform:uppercase;}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse-dot 1.4s ease-in-out infinite;}
+@keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.4;transform:scale(0.7);}}
+.refresh-info{font-family:'JetBrains Mono';font-size:11px;color:var(--muted);}
+#countdown{color:var(--gold);}
+main{padding:28px 36px 110px;max-width:1400px;margin:0 auto;}
+.election-header{text-align:center;margin-bottom:32px;}
+.election-header h1{font-family:'Bebas Neue';font-size:clamp(30px,5vw,54px);letter-spacing:4px;}
+.election-header h1 span{color:var(--gold2);}
+.election-header .subtitle{font-size:12px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-top:5px;}
+.stat-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:30px;}
+.g-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 20px;display:flex;align-items:center;gap:12px;}
+.g-icon{font-size:24px;}
+.g-val{font-family:'Bebas Neue';font-size:30px;color:var(--gold2);line-height:1;}
+.g-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px;}
+.section-label{font-size:11px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:10px;}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border);}
+.grand-candidates{margin-bottom:32px;}
+.candidates-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;}
+.c-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px 20px;position:relative;overflow:hidden;transition:border-color .3s,box-shadow .3s;}
+.c-card.leading{border-color:var(--gold);box-shadow:0 0 28px rgba(240,192,64,0.18);}
+.c-top-bar{position:absolute;top:0;left:0;right:0;height:3px;border-radius:14px 14px 0 0;}
+.crown{display:none;position:absolute;top:12px;right:12px;font-size:17px;}
+.c-card.leading .crown{display:block;}
+.c-name{font-family:'Bebas Neue';font-size:22px;letter-spacing:1.5px;margin-bottom:4px;}
+.c-tag{font-size:11px;color:var(--muted);margin-bottom:16px;font-style:italic;}
+.c-votes{font-family:'JetBrains Mono';font-size:38px;font-weight:700;color:var(--text);line-height:1;}
+.c-vote-lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:4px;margin-bottom:14px;}
+.progress-track{height:5px;background:var(--border);border-radius:99px;overflow:hidden;margin-bottom:8px;}
+.progress-fill{height:100%;border-radius:99px;transition:width .8s cubic-bezier(.4,0,.2,1);}
+.c-pct{font-family:'JetBrains Mono';font-size:12px;color:var(--dim);text-align:right;}
+.rooms-section{margin-bottom:30px;}
+.rooms-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;}
+.room-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 20px;}
+.room-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.room-name-lbl{font-family:'Bebas Neue';font-size:17px;letter-spacing:1.5px;color:var(--gold2);}
+.room-badge{font-family:'JetBrains Mono';font-size:10px;border-radius:4px;padding:2px 7px;border:1px solid var(--border);background:var(--surface);color:var(--muted);}
+.room-badge.reported{color:var(--green);border-color:rgba(46,204,113,0.3);background:rgba(46,204,113,0.06);}
+.room-badge.pending{color:#e8a020;border-color:rgba(232,160,32,0.3);background:rgba(232,160,32,0.06);}
+.room-rows{display:flex;flex-direction:column;gap:8px;}
+.room-row{display:flex;align-items:center;gap:10px;}
+.room-row-name{font-size:11px;color:var(--dim);min-width:80px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.room-row-track{flex:1;height:4px;background:var(--border);border-radius:99px;overflow:hidden;}
+.room-row-fill{height:100%;border-radius:99px;transition:width .7s ease;}
+.room-row-val{font-family:'JetBrains Mono';font-size:11px;color:var(--text);min-width:26px;text-align:right;}
+.room-total{margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:11px;color:var(--muted);display:flex;justify-content:space-between;}
+.room-total span:last-child{font-family:'JetBrains Mono';color:var(--dim);}
+.log-section{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px 24px;margin-bottom:28px;}
+.log-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.log-title{font-family:'Bebas Neue';font-size:17px;letter-spacing:2px;color:var(--dim);}
+.log-clear{font-size:11px;color:var(--muted);cursor:pointer;text-decoration:underline;}
+.log-clear:hover{color:var(--gold);}
+.log-list{display:flex;flex-direction:column;gap:7px;max-height:150px;overflow-y:auto;}
+.log-list::-webkit-scrollbar{width:4px;}
+.log-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.log-entry{display:flex;gap:12px;font-family:'JetBrains Mono';font-size:11px;color:var(--dim);padding:7px 11px;background:var(--surface);border-radius:6px;border-left:3px solid var(--border);}
+.log-entry.new{border-left-color:var(--gold);color:var(--text);}
+.log-time{color:var(--muted);min-width:70px;}
+
+/* ── LOCKED CONFIG BAR ───────────────────────────────────────────────── */
+.config-bar{padding:20px 26px;background:var(--surface);border:1px solid var(--border);border-radius:14px;cursor:pointer;user-select:none;}
+.config-bar-header{display:flex;align-items:center;justify-content:space-between;}
+.config-bar-label{font-size:12px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;display:flex;align-items:center;gap:8px;}
+.lock-icon{font-size:15px;}
+.config-inner{margin-top:20px;display:grid;gap:22px;}
+.cfg-title{font-size:11px;letter-spacing:2px;color:var(--gold);text-transform:uppercase;margin-bottom:10px;}
+.fields-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.field-group{display:flex;flex-direction:column;gap:6px;}
+.field-group label{font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;}
+.cfg-input{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:9px 13px;color:var(--text);font-family:'JetBrains Mono';font-size:12px;outline:none;transition:border-color .2s;width:100%;}
+.cfg-input:focus{border-color:var(--gold);}
+.cfg-input::placeholder{color:var(--muted);}
+.dynamic-list{display:flex;flex-direction:column;gap:8px;}
+.dynamic-row{display:flex;align-items:center;gap:8px;}
+.dynamic-row .row-num{font-family:'JetBrains Mono';font-size:11px;color:var(--muted);min-width:22px;}
+.btn-sm{background:transparent;color:var(--dim);border:1px solid var(--border);border-radius:6px;padding:6px 14px;font-family:'DM Sans';font-size:12px;cursor:pointer;transition:border-color .2s,color .2s;white-space:nowrap;}
+.btn-sm:hover{border-color:var(--gold);color:var(--gold);}
+.btn-sm.danger:hover{border-color:var(--red);color:var(--red);}
+.hint-box{font-size:12px;color:var(--muted);line-height:1.85;background:rgba(201,153,26,0.06);border:1px solid rgba(201,153,26,0.14);border-radius:8px;padding:14px 16px;}
+.hint-box strong{color:var(--gold2);}
+.hint-box code{background:rgba(255,255,255,0.06);padding:1px 6px;border-radius:4px;font-family:'JetBrains Mono';font-size:11px;color:var(--gold);}
+.hint-box ol{margin-left:18px;margin-top:6px;}
+.hint-box li{margin-bottom:8px;}
+.script-box{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px 16px;font-family:'JetBrains Mono';font-size:11px;color:var(--dim);white-space:pre;overflow-x:auto;margin-top:8px;line-height:1.7;}
+.btn-apply{background:linear-gradient(90deg,var(--gold),var(--gold2));color:#07090f;border:none;border-radius:8px;padding:11px 28px;font-family:'DM Sans';font-size:13px;font-weight:700;cursor:pointer;transition:opacity .2s,transform .15s;margin-top:14px;}
+.btn-apply:hover{opacity:.88;transform:translateY(-1px);}
+.btn-lock-out{background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:8px;padding:8px 18px;font-family:'DM Sans';font-size:12px;cursor:pointer;margin-top:10px;transition:border-color .2s,color .2s;}
+.btn-lock-out:hover{border-color:var(--red);color:var(--red);}
+.mode-tabs{display:flex;gap:8px;margin-bottom:14px;}
+.mode-tab{padding:7px 16px;border-radius:6px;font-size:12px;cursor:pointer;border:1px solid var(--border);color:var(--dim);background:transparent;transition:all .2s;font-family:'DM Sans';}
+.mode-tab.active{border-color:var(--gold);color:var(--gold);background:rgba(201,153,26,0.1);}
+.mode-panel{display:none;}
+.mode-panel.active{display:block;}
+
+/* ── PASSWORD OVERLAY ────────────────────────────────────────────────── */
+.pw-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:600;align-items:center;justify-content:center;}
+.pw-overlay.visible{display:flex;}
+.pw-box{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:36px 40px;min-width:320px;max-width:90vw;text-align:center;}
+.pw-icon{font-size:36px;margin-bottom:14px;}
+.pw-title{font-family:'Bebas Neue';font-size:26px;letter-spacing:3px;color:var(--gold2);margin-bottom:6px;}
+.pw-sub{font-size:12px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:24px;}
+.pw-input{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 18px;color:var(--text);font-family:'JetBrains Mono';font-size:20px;outline:none;width:100%;text-align:center;letter-spacing:8px;transition:border-color .2s;}
+.pw-input:focus{border-color:var(--gold);}
+.pw-input.shake{animation:shake .35s ease;}
+.pw-error{font-size:12px;color:var(--red);margin-top:10px;height:16px;letter-spacing:1px;}
+.pw-actions{display:flex;gap:10px;margin-top:20px;}
+.pw-btn-go{flex:1;background:linear-gradient(90deg,var(--gold),var(--gold2));color:#07090f;border:none;border-radius:8px;padding:12px;font-family:'DM Sans';font-size:14px;font-weight:700;cursor:pointer;}
+.pw-btn-cancel{padding:12px 18px;background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--dim);font-family:'DM Sans';font-size:13px;cursor:pointer;}
+@keyframes shake{0%,100%{transform:translateX(0);}20%{transform:translateX(-8px);}40%{transform:translateX(8px);}60%{transform:translateX(-6px);}80%{transform:translateX(6px);}}
+
+.empty-state{text-align:center;padding:40px 20px;color:var(--muted);font-size:13px;}
+.empty-state .emoji{font-size:32px;margin-bottom:10px;}
+#status-bar{position:fixed;bottom:0;left:0;right:0;z-index:200;padding:8px 36px;display:flex;align-items:center;gap:12px;background:var(--surface);border-top:1px solid var(--border);font-family:'JetBrains Mono';font-size:11px;color:var(--muted);}
+#status-msg{flex:1;}
+#status-msg.ok{color:var(--green);}
+#status-msg.err{color:var(--red);}
+#status-msg.warn{color:#e8a020;}
+@media(max-width:860px){main{padding:18px 14px 110px;}header{padding:14px 16px;}.stat-strip{grid-template-columns:1fr 1fr;}.fields-2{grid-template-columns:1fr;}#status-bar{padding:8px 14px;}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-block">
+    <div class="logo-icon">TD</div>
+    <div class="logo-text">
+      <div class="org">Team Diamond Alumni</div>
+      <div class="sub">Election War Room</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="refresh-info">Refresh in <span id="countdown">10</span>s</div>
+    <div class="live-badge"><span class="live-dot"></span>Live</div>
+  </div>
+</header>
+
+<main>
+  <div class="election-header">
+    <h1>Presidential <span>Election</span> Tally</h1>
+    <div class="subtitle">Multi-Room Live Aggregation &nbsp;·&nbsp; <span id="current-date"></span></div>
+  </div>
+
+  <div class="stat-strip">
+    <div class="g-card"><div class="g-icon">🗳️</div><div><div class="g-val" id="g-total">0</div><div class="g-label">Total Votes</div></div></div>
+    <div class="g-card"><div class="g-icon">👑</div><div><div class="g-val" id="g-leader" style="font-size:20px">—</div><div class="g-label">Current Leader</div></div></div>
+    <div class="g-card"><div class="g-icon">📍</div><div><div class="g-val" id="g-rooms">0 / 0</div><div class="g-label">Rooms Reported</div></div></div>
+    <div class="g-card"><div class="g-icon">📊</div><div><div class="g-val" id="g-margin">0</div><div class="g-label">Lead Margin</div></div></div>
+  </div>
+
+  <div class="grand-candidates">
+    <div class="section-label">Grand Total — All Polling Rooms</div>
+    <div class="candidates-grid" id="grand-grid">
+      <div class="empty-state"><div class="emoji">⚙️</div>Configure candidates &amp; data source below to begin.</div>
+    </div>
+  </div>
+
+  <div class="rooms-section">
+    <div class="section-label">Breakdown by Polling Room</div>
+    <div class="rooms-grid" id="rooms-grid">
+      <div class="empty-state"><div class="emoji">📍</div>No polling rooms configured yet.</div>
+    </div>
+  </div>
+
+  <div class="log-section">
+    <div class="log-header">
+      <div class="log-title">Update Log</div>
+      <span class="log-clear" onclick="clearLog()">Clear</span>
+    </div>
+    <div class="log-list" id="log-list">
+      <div class="log-entry"><span class="log-time">--:--:--</span><span>War room ready. Click ⚙ Setup to configure (password required).</span></div>
+    </div>
+  </div>
+
+  <!-- LOCKED CONFIG BAR -->
+  <div class="config-bar" onclick="requestUnlock()" id="config-trigger">
+    <div class="config-bar-header">
+      <div class="config-bar-label"><span class="lock-icon">🔒</span> Setup — Candidates, Polling Rooms &amp; Data Source</div>
+      <div style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono';">LOCKED · Click to unlock</div>
+    </div>
+  </div>
+
+  <!-- CONFIG PANEL (hidden until unlocked) -->
+  <div id="config-panel" style="display:none;margin-top:12px;padding:20px 26px;background:var(--surface);border:1px solid var(--gold);border-radius:14px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div style="font-size:12px;letter-spacing:2px;color:var(--gold);text-transform:uppercase;display:flex;align-items:center;gap:8px;"><span>🔓</span> Setup — Unlocked</div>
+      <button class="btn-lock-out" onclick="lockPanel()">🔒 Lock &amp; Close</button>
+    </div>
+    <div class="config-inner">
+
+      <div>
+        <div class="cfg-title">1 · Candidates <span id="cand-count" style="color:var(--dim);font-size:10px;">(0)</span></div>
+        <div class="dynamic-list" id="cand-list"></div>
+        <div style="display:flex;gap:8px;margin-top:10px;">
+          <button class="btn-sm" onclick="addCandidate()">+ Add Candidate</button>
+          <button class="btn-sm danger" onclick="removeCandidate()">− Remove Last</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="cfg-title">2 · Polling Rooms <span id="room-count" style="color:var(--dim);font-size:10px;">(0)</span></div>
+        <div class="dynamic-list" id="room-list"></div>
+        <div style="display:flex;gap:8px;margin-top:10px;">
+          <button class="btn-sm" onclick="addRoom()">+ Add Room</button>
+          <button class="btn-sm danger" onclick="removeRoom()">− Remove Last</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="cfg-title">3 · Data Source</div>
+        <div class="mode-tabs">
+          <button class="mode-tab active" onclick="switchMode('apps')" id="tab-apps">✅ Apps Script (Recommended)</button>
+          <button class="mode-tab" onclick="switchMode('manual')" id="tab-manual">✏️ Manual Entry</button>
+        </div>
+        <div class="mode-panel active" id="panel-apps">
+          <div class="hint-box">
+            <strong>One-time setup — resolves CORS issues:</strong>
+            <ol>
+              <li>Open your Google Sheet → <strong>Extensions → Apps Script</strong></li>
+              <li>Paste this script and click Save:</li>
+            </ol>
+            <div class="script-box">function doGet(e) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheets()[0];
+  var data = sheet.getDataRange().getValues();
+  var rows = [];
+  for (var i = 1; i &lt; data.length; i++) { rows.push(data[i]); }
+  return ContentService.createTextOutput(JSON.stringify({ rows: rows }))
+    .setMimeType(ContentService.MimeType.JSON);
+}</div>
+            <ol start="3">
+              <li>Deploy → New deployment → Web app</li>
+              <li>Execute as: <strong>Me</strong> · Who has access: <strong>Anyone</strong></li>
+              <li>Copy the Web app URL and paste below</li>
+            </ol>
+          </div>
+          <div class="field-group" style="margin-top:12px;">
+            <label>Apps Script Web App URL</label>
+            <input class="cfg-input" type="text" id="script-url" placeholder="https://script.google.com/macros/s/YOUR_ID/exec"/>
+          </div>
+        </div>
+        <div class="mode-panel" id="panel-manual">
+          <div class="hint-box">
+            <strong>Manual mode</strong> — no Google Sheet needed. Each room card gets an Enter Votes button for direct tally input.
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-apply" onclick="applyConfig()">Apply &amp; Connect</button>
+    </div>
+  </div>
+</main>
+
+<!-- PASSWORD OVERLAY -->
+<div class="pw-overlay" id="pw-overlay">
+  <div class="pw-box">
+    <div class="pw-icon">🔐</div>
+    <div class="pw-title">Admin Access</div>
+    <div class="pw-sub">Enter password to open setup</div>
+    <input class="pw-input" type="password" id="pw-input" maxlength="10" placeholder="·····"
+      onkeydown="if(event.key==='Enter')checkPassword()" oninput="document.getElementById('pw-error').textContent=''"/>
+    <div class="pw-error" id="pw-error"></div>
+    <div class="pw-actions">
+      <button class="pw-btn-cancel" onclick="closeOverlay()">Cancel</button>
+      <button class="pw-btn-go" onclick="checkPassword()">Unlock</button>
+    </div>
+  </div>
+</div>
+
+<div id="status-bar">
+  <span id="status-msg">Click ⚙ Setup to configure (password protected).</span>
+  <span id="last-updated">Last updated: —</span>
+</div>
+
+<script>
+const PALETTE=['#f0c040','#3d9be9','#e05252','#2ecc71','#b06de8','#f07840','#40d4c8','#e870a0'];
+const PASS='20159';
+function color(i){return PALETTE[i%PALETTE.length];}
+
+const S={
+  scriptUrl:localStorage.getItem('lw5_scriptUrl')||'',
+  mode:localStorage.getItem('lw5_mode')||'apps',
+  cands:JSON.parse(localStorage.getItem('lw5_cands')||'["Candidate A","Candidate B"]'),
+  rooms:JSON.parse(localStorage.getItem('lw5_rooms')||'["Room 1","Room 2"]'),
+  roomData:JSON.parse(localStorage.getItem('lw5_manual')||'{}'),
+  intervalId:null,cdId:null,cdVal:10,unlocked:false,
+};
+
+document.getElementById('current-date').textContent=new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+restoreConfigUI();
+renderAll();
+if(S.mode==='apps'&&S.scriptUrl)startPolling();
+
+// ── PASSWORD GATE ─────────────────────────────────────────────────────────────
+function requestUnlock(){
+  if(S.unlocked){togglePanel();return;}
+  document.getElementById('pw-overlay').classList.add('visible');
+  setTimeout(()=>document.getElementById('pw-input').focus(),80);
+}
+
+function checkPassword(){
+  const val=document.getElementById('pw-input').value;
+  if(val===PASS){
+    S.unlocked=true;
+    closeOverlay();
+    openPanel();
+    addLog('Setup panel unlocked by admin.',true);
+  }else{
+    const inp=document.getElementById('pw-input');
+    document.getElementById('pw-error').textContent='Incorrect password. Try again.';
+    inp.classList.add('shake');
+    inp.value='';
+    setTimeout(()=>inp.classList.remove('shake'),400);
+  }
+}
+
+function closeOverlay(){
+  document.getElementById('pw-overlay').classList.remove('visible');
+  document.getElementById('pw-input').value='';
+  document.getElementById('pw-error').textContent='';
+}
+
+function openPanel(){
+  document.getElementById('config-panel').style.display='block';
+  document.getElementById('config-trigger').style.display='none';
+  document.getElementById('config-panel').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function lockPanel(){
+  S.unlocked=false;
+  document.getElementById('config-panel').style.display='none';
+  document.getElementById('config-trigger').style.display='block';
+  addLog('Setup panel locked.');
+}
+
+function togglePanel(){
+  const p=document.getElementById('config-panel');
+  if(p.style.display==='none'){openPanel();}else{lockPanel();}
+}
+
+// ── CONFIG UI ─────────────────────────────────────────────────────────────────
+function switchMode(m){
+  S.mode=m;
+  document.querySelectorAll('.mode-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.mode-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+m).classList.add('active');
+  document.getElementById('panel-'+m).classList.add('active');
+}
+
+function restoreConfigUI(){
+  switchMode(S.mode);
+  if(S.scriptUrl)document.getElementById('script-url').value=S.scriptUrl;
+  rebuildCandList();rebuildRoomList();
+}
+
+function rebuildCandList(){
+  const el=document.getElementById('cand-list');el.innerHTML='';
+  S.cands.forEach((c,i)=>{
+    const row=document.createElement('div');row.className='dynamic-row';
+    row.innerHTML=`<span class="row-num" style="color:${color(i)}">C${i+1}</span>
+      <input class="cfg-input cand-input" type="text" value="${c}" placeholder="Candidate name" style="border-left:3px solid ${color(i)};"/>`;
+    el.appendChild(row);
+  });
+  document.getElementById('cand-count').textContent=`(${S.cands.length})`;
+}
+function rebuildRoomList(){
+  const el=document.getElementById('room-list');el.innerHTML='';
+  S.rooms.forEach((r,i)=>{
+    const row=document.createElement('div');row.className='dynamic-row';
+    row.innerHTML=`<span class="row-num">R${i+1}</span>
+      <input class="cfg-input room-input" type="text" value="${r}" placeholder="e.g. Hall A"/>`;
+    el.appendChild(row);
+  });
+  document.getElementById('room-count').textContent=`(${S.rooms.length})`;
+}
+function addCandidate(){S.cands.push('Candidate '+(S.cands.length+1));rebuildCandList();}
+function removeCandidate(){if(S.cands.length>1){S.cands.pop();rebuildCandList();}}
+function addRoom(){S.rooms.push('Room '+(S.rooms.length+1));rebuildRoomList();}
+function removeRoom(){if(S.rooms.length>1){S.rooms.pop();rebuildRoomList();}}
+
+function applyConfig(){
+  S.mode=document.querySelector('.mode-tab.active').id.replace('tab-','');
+  S.scriptUrl=document.getElementById('script-url').value.trim();
+  S.cands=Array.from(document.querySelectorAll('.cand-input')).map(e=>e.value.trim()||'Candidate');
+  S.rooms=Array.from(document.querySelectorAll('.room-input')).map(e=>e.value.trim()).filter(Boolean);
+  if(!S.rooms.length)S.rooms=['Room 1'];
+  localStorage.setItem('lw5_scriptUrl',S.scriptUrl);
+  localStorage.setItem('lw5_mode',S.mode);
+  localStorage.setItem('lw5_cands',JSON.stringify(S.cands));
+  localStorage.setItem('lw5_rooms',JSON.stringify(S.rooms));
+  if(S.mode==='manual'){
+    const clean={};S.rooms.forEach(r=>{if(S.roomData[r])clean[r]=S.roomData[r];});
+    S.roomData=clean;saveManual();
+  }else{S.roomData={};}
+  addLog(`Config saved — ${S.cands.length} candidates, ${S.rooms.length} rooms, mode: ${S.mode}.`,true);
+  lockPanel();
+  renderAll();
+  if(S.mode==='apps'&&S.scriptUrl)startPolling();
+}
+
+// ── FETCH ─────────────────────────────────────────────────────────────────────
+function startPolling(){
+  if(S.intervalId)clearInterval(S.intervalId);
+  if(S.cdId)clearInterval(S.cdId);
+  fetchData();
+  S.intervalId=setInterval(fetchData,10000);
+  startCountdown();
+}
+function startCountdown(){
+  if(S.cdId)clearInterval(S.cdId);
+  S.cdVal=10;document.getElementById('countdown').textContent=10;
+  S.cdId=setInterval(()=>{S.cdVal--;if(S.cdVal<0)S.cdVal=10;document.getElementById('countdown').textContent=S.cdVal;},1000);
+}
+async function fetchData(){
+  if(!S.scriptUrl){setStatus('No Apps Script URL configured.','warn');return;}
+  setStatus('Fetching…','');
+  try{
+    const res=await fetch(S.scriptUrl+'?t='+Date.now(),{redirect:'follow'});
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    const json=await res.json();
+    if(!json.rows)throw new Error('Unexpected response — check Apps Script code.');
+    const prev=JSON.stringify(S.roomData);
+    const latest={};
+    json.rows.forEach(row=>{
+      const roomVal=row[1]?String(row[1]).trim():'';
+      if(!roomVal)return;
+      const votes=S.cands.map((_,i)=>parseNum(row[2+i]));
+      latest[roomVal]=votes;
+    });
+    S.roomData=latest;
+    const changed=JSON.stringify(S.roomData)!==prev;
+    const now=new Date().toLocaleTimeString();
+    document.getElementById('last-updated').textContent='Last updated: '+now;
+    setStatus('Refreshed at '+now,'ok');
+    if(changed)addLog('New tally data received — standings updated.',true);
+    renderAll();startCountdown();
+  }catch(e){
+    setStatus('Fetch error: '+e.message,'err');
+    addLog('⚠ '+e.message);
+  }
+}
+function parseNum(v){if(v===undefined||v===null||v==='')return 0;const n=Number(String(v).replace(/[^0-9.\-]/g,''));return isNaN(n)?0:n;}
+
+// ── MANUAL ENTRY ──────────────────────────────────────────────────────────────
+function saveManual(){localStorage.setItem('lw5_manual',JSON.stringify(S.roomData));}
+function openManualEntry(room){
+  const existing=S.roomData[room]||new Array(S.cands.length).fill(0);
+  const fields=S.cands.map((c,i)=>`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+      <span style="font-size:12px;color:${color(i)};min-width:120px;">${c}</span>
+      <input id="me_${i}" class="cfg-input" type="number" min="0" value="${existing[i]||0}" style="width:100px;"/>
+    </div>`).join('');
+  const overlay=document.createElement('div');
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:700;display:flex;align-items:center;justify-content:center;';
+  overlay.innerHTML=`<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px 32px;min-width:320px;max-width:90vw;">
+    <div style="font-family:Bebas Neue,sans-serif;font-size:22px;letter-spacing:2px;color:var(--gold2);margin-bottom:6px;">${room}</div>
+    <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:20px;">Enter current vote counts</div>
+    ${fields}
+    <div style="display:flex;gap:10px;margin-top:18px;">
+      <button onclick="submitManual('${room}',this)" style="flex:1;background:linear-gradient(90deg,var(--gold),var(--gold2));color:#07090f;border:none;border-radius:8px;padding:10px;font-weight:700;cursor:pointer;">Save Tally</button>
+      <button onclick="this.closest('[style*=fixed]').remove()" style="padding:10px 18px;background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--dim);cursor:pointer;">Cancel</button>
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+}
+function submitManual(room,btn){
+  const overlay=btn.closest('[style*="position:fixed"]');
+  const votes=S.cands.map((_,i)=>parseNum(document.getElementById('me_'+i).value));
+  S.roomData[room]=votes;saveManual();overlay.remove();
+  addLog(`Manual tally saved for ${room}.`,true);renderAll();
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function renderAll(){
+  const{cands,rooms,roomData}=S;const n=cands.length;
+  const grand=new Array(n).fill(0);let reported=0;
+  rooms.forEach(r=>{if(roomData[r]){roomData[r].forEach((v,i)=>{if(i<n)grand[i]+=v;});reported++;}});
+  const grandTotal=grand.reduce((a,b)=>a+b,0);
+  const maxG=Math.max(...grand,1);
+  const leadIdx=grand.indexOf(Math.max(...grand));
+  document.getElementById('g-total').textContent=grandTotal.toLocaleString();
+  document.getElementById('g-leader').textContent=grandTotal>0?cands[leadIdx]:'—';
+  document.getElementById('g-rooms').textContent=`${reported} / ${rooms.length}`;
+  const sorted=[...grand].sort((a,b)=>b-a);
+  document.getElementById('g-margin').textContent=grandTotal>0?(sorted[0]-sorted[1]).toLocaleString():'0';
+
+  const gg=document.getElementById('grand-grid');gg.innerHTML='';
+  cands.forEach((name,i)=>{
+    const pct=grandTotal>0?((grand[i]/grandTotal)*100).toFixed(1):'0.0';
+    const barW=grandTotal>0?((grand[i]/maxG)*100).toFixed(1):0;
+    const lead=grandTotal>0&&i===leadIdx;const col=color(i);
+    gg.innerHTML+=`<div class="c-card ${lead?'leading':''}">
+      <div class="c-top-bar" style="background:${col}"></div><span class="crown">👑</span>
+      <div class="c-name" style="color:${col}">${name}</div>
+      <div class="c-tag">Presidential Candidate</div>
+      <div class="c-votes">${grand[i].toLocaleString()}</div>
+      <div class="c-vote-lbl">Total Votes</div>
+      <div class="progress-track"><div class="progress-fill" style="width:${barW}%;background:${col}"></div></div>
+      <div class="c-pct">${pct}%</div>
+    </div>`;
+  });
+
+  const rg=document.getElementById('rooms-grid');rg.innerHTML='';
+  if(!rooms.length){rg.innerHTML='<div class="empty-state"><div class="emoji">📍</div>No polling rooms configured.</div>';return;}
+  rooms.forEach(room=>{
+    const data=roomData[room]||null;const isRep=!!data;
+    const rv=data||new Array(n).fill(0);
+    const roomTotal=rv.reduce((a,b)=>a+b,0);const maxRv=Math.max(...rv,1);
+    const rowsHtml=cands.map((cn,i)=>{
+      const bw=isRep?((rv[i]||0)/maxRv*100).toFixed(1):0;
+      return `<div class="room-row">
+        <span class="room-row-name">${cn}</span>
+        <div class="room-row-track"><div class="room-row-fill" style="width:${bw}%;background:${color(i)}"></div></div>
+        <span class="room-row-val">${isRep?(rv[i]||0).toLocaleString():'—'}</span>
+      </div>`;
+    }).join('');
+    const manualBtn=S.mode==='manual'?`<button onclick="openManualEntry('${room}')" style="font-size:11px;color:var(--gold);background:rgba(201,153,26,0.1);border:1px solid rgba(201,153,26,0.3);border-radius:4px;padding:3px 10px;cursor:pointer;">Enter Votes</button>`:'';
+    rg.innerHTML+=`<div class="room-card">
+      <div class="room-header">
+        <div class="room-name-lbl">${room}</div>
+        <div style="display:flex;align-items:center;gap:6px;">${manualBtn}
+          <div class="room-badge ${isRep?'reported':'pending'}">${isRep?'✓ Reported':'⏳ Pending'}</div>
+        </div>
+      </div>
+      <div class="room-rows">${rowsHtml}</div>
+      <div class="room-total"><span>Total from this room</span><span>${isRep?roomTotal.toLocaleString():'—'}</span></div>
+    </div>`;
+  });
+}
+
+function addLog(msg,isNew=false){
+  const list=document.getElementById('log-list');const time=new Date().toLocaleTimeString();
+  const el=document.createElement('div');el.className='log-entry'+(isNew?' new':'');
+  el.innerHTML=`<span class="log-time">${time}</span><span>${msg}</span>`;
+  list.prepend(el);while(list.children.length>50)list.removeChild(list.lastChild);
+}
+function clearLog(){document.getElementById('log-list').innerHTML='<div class="log-entry"><span class="log-time">--:--:--</span><span>Log cleared.</span></div>';}
+function setStatus(msg,type=''){const el=document.getElementById('status-msg');el.textContent=msg;el.className=type;}
+</script>
+</body>
+</html>
